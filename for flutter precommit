@@ -1,0 +1,42 @@
+# Specify minimum pre-commit version
+minimum_pre_commit_version: "3.5.0"
+
+repos:
+  # Local hooks for Flutter/Dart
+  - repo: local
+    hooks:
+
+      # ---------------------------
+      # 1. Dart format (auto-fix)
+      # ---------------------------
+      - id: dart-format
+        name: Dart Format
+        entry: dart format .
+        language: system
+        pass_filenames: false
+
+      # ---------------------------
+      # 2. Flutter Analyze (lint)
+      # ---------------------------
+      - id: flutter-analyze
+        name: Flutter Analyze
+        entry: bash -c 'flutter pub get && flutter analyze --fatal-infos'
+        language: system
+        pass_filenames: false
+
+      # ---------------------------
+      # 3. Block debug prints / TODOs
+      # ---------------------------
+      - id: block-debug
+        name: Block print/debug/TODO
+        entry: bash -c 'if grep -R "print(\|debugPrint\|TODO" lib/; then echo "❌ Found debug prints or TODOs"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+  # Common pre-commit hooks (like trailing whitespace, merge conflicts)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: trailing-whitespace
