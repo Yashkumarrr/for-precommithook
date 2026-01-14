@@ -1,0 +1,57 @@
+name: Flutter CI (MRN Config + APK Build)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+
+    steps:
+      # Step 1: Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.0"
+          cache: true
+
+      # Step 3: Download config file using MRN
+      - name: Download config from MRN
+        run: |
+          mkdir -p config
+          curl -o config/app_config.json "${{ secrets.CONFIG_URL }}"
+          test -s config/app_config.json
+
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Step 5: Analyze code
+      - name: Analyze
+        run: flutter analyze
+
+      # Step 6: Run tests
+      - name: Test
+        run: flutter test
+
+      # Step 7: Build APK
+      - name: Build APK (Release)
+        run: flutter build apk --release
+
+      - name: Upload APK to S3 artifacts folder
+        run: |
+          APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+          SHORT_SHA="${GITHUB_SHA::7}"
+
